@@ -13,5 +13,8 @@ View(facetSL)
 #MA7d_DAT = maximum 7 day average temp
 #sw_begin = julian day 1st day of spawn window
 
-fit <- lmer(Slope ~ MxDAT + sw_begin + (1|site), data=facetSL)
-summary (fit)
+Mx <- lme(Slope ~ MxDAT + sw_begin, random = ~1|site, data=facetSL)
+summary(Mx)
+
+MA7d_DAT <- lme(Slope ~ MA7d_DAT + sw_begin, random = ~1|site, data=facetSL)
+summary(MA7d_DAT)
