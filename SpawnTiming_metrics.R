@@ -1,6 +1,6 @@
 library(tidyverse)
 
-spawn <- read_csv("Data/spawnwindow.csv")
+spawn <- read_csv("Data/spawn_timeseries.csv")
 
 tempmetrics <- function(datainput,outtable) {
   
@@ -139,8 +139,10 @@ facets <- tempmetrics(spawn[complete.cases(spawn),], "spawn_facets")
 facets$site <- sub('_.*', '', facets$site.year)
 facets$year <- sub('.*_', '', facets$site.year)
 
-ggplot(facets, aes(x = WAT75, y = site, color = year)) +
+ggplot(facets, aes(x = MxDAT, y = site, color = year)) +
   geom_point()
 
+View(facets)
 
+write.csv(facets, "Data/facets_spawn.csv")
 
