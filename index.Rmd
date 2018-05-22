@@ -1,0 +1,61 @@
+---
+title: "slope models"
+author: "Leslie Jones"
+date: "May 21, 2018"
+output: html_document
+---
+
+```{r message=FALSE}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(lme4)
+library(nlme)
+library(DT)
+
+
+```
+#Intro
+Per Curry's email on April 18th:
+Models are trying to address the question of whether streams with higher maximum temperatures are more likely to exhibit occupancy that is distributed further (to the right) from the thermal peak.
+
+#Slope of Temperature
+We fit a linear model to temperature time-series within the spawning window for each site-year combination. Theoretically,  slope of temperature experienced by population p in year t, or the rate of change in temperature at each site/year. 
+
+#Temperature Metrics
+We calculated Maximum temperature metrics for each site/year observation.
+
+MxDAT = maximum daily average temp
+
+MA7d_DAT = maximum 7 day average temp
+
+sw_begin = julian day 1st day of spawn window
+
+
+#Curry's Model idea
+Model the relationship with a population-specific intercept, common effect of MaxTemp across populations, while treating your year t as a random effect on your intercept(s).
+
+#What we have here
+Instead of population-specific intercept with random year - we've modeled relationship for each population/year combination with random site. OK?
+
+
+
+```{r}
+facetSL <- read.csv("Data/Mergeslopefacets.csv")
+facetSL <- facetSL %>% 
+  select(site, year, MxDAT, MA7d_DAT, sw_begin, Intercept, Slope, sw_end)
+datatable (facetSL)
+
+
+```
+
+```{r}
+Mx <- lme(Slope ~ MxDAT + sw_begin, random = ~1|site, data=facetSL)
+summary(Mx)
+
+MA7d_DAT <- lme(Slope ~ MA7d_DAT + sw_begin, random = ~1|site, data=facetSL)
+summary(MA7d_DAT)
+```
+

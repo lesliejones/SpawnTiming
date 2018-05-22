@@ -1,0 +1,44 @@
+---
+title: "slope models"
+author: "Leslie Jones"
+date: "May 21, 2018"
+output: html_document
+---
+
+
+MxDAT = maximum daily average temp
+
+MA7d_DAT = maximum 7 day average temp
+
+sw_begin = julian day 1st day of spawn window
+
+```{r message=FALSE}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(lme4)
+library(nlme)
+library(DT)
+
+
+```
+
+```{r}
+facetSL <- read.csv("Data/Mergeslopefacets.csv")
+facetSL <- facetSL %>% 
+  select(site, year, MxDAT, MA7d_DAT, sw_begin, Intercept, Slope, sw_end)
+datatable (facetSL)
+
+
+```
+
+```{r}
+Mx <- lme(Slope ~ MxDAT + sw_begin, random = ~1|site, data=facetSL)
+summary(Mx)
+
+MA7d_DAT <- lme(Slope ~ MA7d_DAT + sw_begin, random = ~1|site, data=facetSL)
+summary(MA7d_DAT)
+```
+
