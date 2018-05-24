@@ -19,13 +19,37 @@ library(DT)
 ```
 #Intro
 Per Curry's email on April 18th:
-Models are trying to address the question of whether streams with higher maximum temperatures are more likely to exhibit occupancy that is distributed further (to the right) from the thermal peak.
+
+It seems like from what you have it would be easy to address the question of whether streams with higher maximum temperatures are more likely to exhibit occupancy that is distributed further (to the right) from the thermal peak.
+
+If slope_p,t is the slope of your temperature experienced by population p in year t, or the rate of change in temperature 
+
+and MaxTemp_p is the average (across years) of maximum temperature (across seasons),
+
+You could model the relationship with a population-specific intercept, common effect of MaxTemp across populations, while treating your year t as a random effect on your intercept(s).
+
+
+Reminded me of a recent review on “premature migration”.
+While we are talking about the opposite direction, the general idea that streams with higher peak temperature may be forced further away from their phenological optimum is interesting.
+
+Quinn, T.P., McGinnity, P., Reed, T.E., and Bradford, M. 2016. The paradox of “premature migration” by adult anadromous salmonid fishes: patterns and hypotheses. Canadian Journal of Fisheries and Aquatic Sciences 73(7): 1015-1030.
+
+
+Of course if the peak temperature in all streams occurs on the same date, we should expect later occupancy/spawning to occur in warmer streams based on the difference in egg development rate alone.
+
+The key question is whether occupancy/spawn timing is shifted further onto the descending limb of the temp curve than is predicted by the difference in development time alone?
+
+Anyway, just wanted to send my musings while they were fresh.
+
+Cheers,
+
+Curry
 
 #Slope of Temperature
 We fit a linear model to temperature time-series within the spawning window for each site-year combination. Theoretically,  slope of temperature experienced by population p in year t, or the rate of change in temperature at each site/year. 
 
 #Temperature Metrics
-We calculated Maximum temperature metrics for each site/year observation.
+We calculated Maximum temperature metrics for each site/year observation (full time-series).
 
 MxDAT = maximum daily average temp
 
@@ -35,7 +59,9 @@ sw_begin = julian day 1st day of spawn window
 
 
 # Model idea
-Model the relationship with a population-specific intercept, common effect of MaxTemp across populations, while treating your year t as a random effect on your intercept(s).
+Model the relationship with a population-specific intercept (main effect site), common effect of MaxTemp across populations/years, while treating your year t as a random effect on your intercept(s).
+
+Models are trying to address the question of whether streams with higher maximum temperatures are more likely to exhibit occupancy that is distributed further (to the right) from the thermal peak.
 
 
 ```{r}
