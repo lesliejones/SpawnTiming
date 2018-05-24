@@ -34,12 +34,8 @@ MA7d_DAT = maximum 7 day average temp
 sw_begin = julian day 1st day of spawn window
 
 
-#Curry's Model idea
+# Model idea
 Model the relationship with a population-specific intercept, common effect of MaxTemp across populations, while treating your year t as a random effect on your intercept(s).
-
-#What we have here
-Instead of population-specific intercept with random year - we've modeled relationship for each population/year combination with random site. OK?
-
 
 
 ```{r}
@@ -52,10 +48,10 @@ datatable (facetSL)
 ```
 
 ```{r}
-Mx <- lme(Slope ~ MxDAT + sw_begin, random = ~1|site, data=facetSL)
+Mx <- lme(Slope ~ MxDAT + site  , random = ~1|year, data=facetSL)
 summary(Mx)
 
-MA7d_DAT <- lme(Slope ~ MA7d_DAT + sw_begin, random = ~1|site, data=facetSL)
+MA7d_DAT <- lme(Slope ~ MA7d_DAT + site , random = ~1|year, data=facetSL)
 summary(MA7d_DAT)
 ```
 
