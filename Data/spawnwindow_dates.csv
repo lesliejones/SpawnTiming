@@ -1,21 +1,21 @@
-site,sw_begin,sw_end
-Anchor,152,236
-Beaver,205,258
-Chuitna,205,250
-Deception,196,236
-Deep,182,250
-EF Chulitna,188,243
-Fish,213,267
-Deshka,196,243
-Little Willow,196,243
-Montana,196,243
-Moose (Su),182,258
-NF Campbell,182,243
-Ninilchik,196,243
-Rabbit,182,243
-Resurrection,196,243
-Russian,213,250
-Ship,182,243
-Stariski,182,236
-Wasilla,213,273
-Willow,196,227
+site,sw_begin,sw_end,sw_mid
+Anchor,152,236,194
+Beaver,205,258,231
+Chuitna,205,250,227
+Deception,196,236,216
+Deep,182,250,216
+EF Chulitna,188,243,215
+Fish,213,267,240
+Deshka,196,243,219
+Little Willow,196,243,219
+Montana,196,243,219
+Moose (Su),182,258,220
+NF Campbell,182,243,212
+Ninilchik,196,243,219
+Rabbit,182,243,212
+Resurrection,196,243,219
+Russian,213,250,231
+Ship,182,243,212
+Stariski,182,236,209
+Wasilla,213,273,243
+Willow,196,227,211
