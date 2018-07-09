@@ -35,11 +35,12 @@ lme(Slope ~ MxDAT, random = ~1|site, data = facetSL) %>% summary
 
 # MWMT and date of MWMT ---------------------------------------------------
 
-dat <- read_csv("data/spawnwindow.csv")
-dat$Date <- as.Date(dat$Date, format = "%m/%d/%Y")
+dat <- read_csv("data/spawn_timseries.csv")
 dat %>%
   group_by(Site, year) %>%
   summarize(min = min(Date), max = max(Date))
+
+dat <- dat %>% filter(!is.na(Temperature))
 
 library(caTools)
 
