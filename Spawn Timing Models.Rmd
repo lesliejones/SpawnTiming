@@ -1,0 +1,242 @@
+---
+title: "slope models"
+author: "Leslie Jones"
+date: "May 21, 2018"
+output: html_document
+---
+
+```{r message=FALSE}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(lme4)
+library(nlme)
+library(DT)
+```
+#Intro
+
+We wanted to address the question of whether seasonally warmer streams, specifically streams with higher maximum temperatures during the summer months are more likely to exhibit spawning occupancy later in the calendar year. The general idea is that salmon which spawn in streams with higher peak temperatures may be forced further away from their phenological optimum. The hypothesis is that Chinook spawn timing occurs later in warmer streams to avoid warmer peak temperatures. 
+
+#Periodicity Tables
+We matched our stream temperature locations (i.e., streams and rivers) used in the Chinook project to Instream Flow Management (IFM) locations. DNR provided IFM Reports which included Periodicity tables of species specific life-histories (long-term observations/expert knownledge). Periodicity tables were used to establish chinook spawning windows.
+
+The following streams had temperature data and life-history data for Chinook. Designated chinook spwaning windows were pulled from each report. Periodicity tables were used to assigan spawn start dates, end dates and midpoints of spawning window (julian days).
+
+Life-history windows were pulled for Chinook ‘Adult Passage’ and ‘Spawning’. However, most of our yearly temperature data began June 1 st. Because most windows for Adult passage begin in May, we were not able to look at facets and plots for this life-history window.
+
+Streams with temperature and life-history data and associated chinook spawning windows:
+
+```{r}
+#import julian days for spawning windows
+spdays <- read.csv("Data/spawnwindow_dates.csv")
+spdays <- rename(spdays, Site='site')
+datatable (spdays)
+#import temperature time-series
+temp <- read.csv("Data/spawn_timseries.csv")
+temp <- filter(temp, Temperature != "NA")
+#View(temp)
+#merge datasets
+temp2 <- merge(x=temp, y=spdays, by=c("Site"), all.x=TRUE)
+```
+#Temperature Time-Series
+
+Empirical temperature data was overlaid with chinook spawning windows to investigate spawn-timing associated with thermal curves. The following graphs show thermal curves averaged across all years with 0.25 confidence bounds. 
+```{r}
+
+p <- ggplot(temp2, aes(x=DayOfYear, y=Temperature )) +
+  geom_rect(data=temp2,aes(xmin=sw_begin, xmax=sw_end, ymin=-Inf, ymax=Inf), fill="lightgrey") +
+  geom_line(aes(colour=factor(year)))+
+  geom_smooth (method="loess", level=0.99) +
+  geom_vline(data=temp2, aes(xintercept = sw_mid)) +
+  theme(legend.position = "none") +
+  facet_wrap (~Site) +
+  theme_bw() +
+  labs(y="Stream temperature (C)",
+       x="Day Of Year")
+
+p
+p +labs(colour = "Year")
+
+
+```
+ We noticed that the spawning windows in cooler streams were concurrent with peak temperatures (apex of the thermal regime curve), where spawning windows in warmer streams fell later in the calendar year (descending limb) to avoid temperatures outside optimal ranges. 
+ 
+To further investigate these tendencies we fit a linear model to temperatures within the spawning window and found that late spawning streams had much steeper slope while earlier spawning streams slope were flatter and/or more muted. The following plot fits a linear model to the temperatures within the spawning window:
+
+```{r}
+spawn <- read_csv("C:/PSMFC_Chinook/Temp_RT/spawnwindow_edit.csv")
+spawn2 <- filter(spawn, Temperature != "NA")
+#View(spawn)
+
+q <- ggplot(spawn2, aes(x=DayOfYear, y=Temperature)) + 
+  geom_smooth (aes(group=year, colour=factor(year)), method = "lm", se = FALSE) +
+  geom_smooth (method = "lm", se = TRUE) + facet_wrap(~Site) +
+  labs(title="Stream temperature",
+       y="Stream temperature (C)",
+       x="Date", theme_bw())
+
+q
+q +labs(colour = "Year")
+
+```
+
+#Spawn Timing Models
+This lead to hypothesis that spawn timing in warmer streams will have a longer lag
+#Temperature Metrics
+We calculated MWAT for all sites by year.
+
+```{r}
+# MWMT and date of MWMT ---------------------------------------------------
+
+dat <- read_csv("data/spawn_timseries.csv")
+dat %>%
+  group_by(Site, year) %>%
+  summarize(min = min(Date), max = max(Date))
+
+dat <- dat %>% filter(!is.na(Temperature))
+
+library(caTools)
+
+#7-day moving average of daily average temps
+dat$WAT <- runmean(dat$Temperature, k = 7, endrule = "NA", align = "center") 
+
+mwat <- dat %>%
+  group_by(Site, year) %>%
+  summarize(WAT = max(WAT, na.rm = TRUE))
+
+mwat <- left_join(mwat, dat)
+mwat.mn <- mwat %>%
+  group_by(Site) %>%
+  summarize(mn.WAT = mean(WAT),
+            md.WAT = median(WAT))
+
+#variability in WAT with mean (red triangle) and median (blue star)
+ggplot(mwat, aes(x = WAT, y = Site)) +
+  geom_point() +
+  geom_point(data = mwat.mn, aes(x = mn.WAT, y = Site),
+             color = "red", shape = 6) +
+  geom_point(data = mwat.mn, aes(x = md.WAT, y = Site),
+             color = "blue", shape = 8)
+
+ggplot(mwat, aes(x = year, y = WAT)) +
+  geom_point() +
+  facet_wrap(~Site)
+
+
+ggplot(mwat, aes(x = WAT, y = year)) +
+  geom_point() 
+
+
+```
+Also calculated maximum temperature for each site by year.
+```{r}
+temp <- read.csv("Data/spawn_timseries.csv")
+temp <- filter(temp, Temperature != "NA")
+View(temp)
+
+require (dplyr)
+temp_max <- temp %>% group_by(Site, year) %>% filter(Temperature = max(Temperature))
+View(temp_max)
+
+maxdata <- merge(x=temp_max, y=temp, by= c("Site", "year", "Temperature"), all.x = TRUE)
+View(maxdata)
+
+
+#rename vars for model merge
+maxdata <- rename(maxdata, maxtemp = 'Temperature')
+maxdata <- rename(maxdata, maxDOY = 'DayOfYear')
+maxdata  %>% select(Site, maxtemp, maxDOY)
+
+#import julian days for spawning windows
+spdays <- read.csv("Data/spawnwindow_dates.csv")
+spdays <- rename(spdays, Site='site')
+View(spdays)
+
+#merge spawn window days to maxtemp dataset
+
+maxdata <- merge(x=maxdata, y=spdays, by=c("Site"), all.x=TRUE)
+
+#calculate julian day difference between maximum temperature in timeseries and midpoint of spawning window
+maxdata$jd_dif <- (maxdata$sw_mid - maxdata$maxDOY)
+View(maxdata)
+
+#plots
+ggplot(maxdata, aes(x = jd_dif, y = maxtemp)) +
+  geom_point() +
+  facet_wrap(~Site)
+
+#plots
+ggplot(maxdata, aes(x = jd_dif, y = maxtemp)) +
+  geom_point() +
+  facet_wrap(~year)
+```
+#jd_dif
+We used julian day of maxT and MWAT and julian day of midpoint of spawning window to calculate a spawn timing metrics that corresponds to peak temperatures in the thermal curve. Low jd_dif values mean spawn windown overlaps with maximum temperatures where a larger jd_dif means a lag between maximum temperature and spawning commencement (i.e., later spawning windows). This is typical of spawning windows falling on the descending limb of the thermal curve as opposed to capturing peak temperautres as we see with cooler streams/ rivers.
+
+#Models
+We removed years 2002-2007 because of small site observations as compared to other years. Ran linear model
+```{r}
+#remove 2002 - 2007 because smaller n
+maxdata <- maxdata %>% filter(!year %in% 2002:2007)
+
+#maxtemp model
+#mixed model
+maxmodel <- lme(jd_dif ~ maxtemp, random = ~1|year, data=maxdata)
+summary(maxmodel)
+
+#linear model
+maxlm <- glm(jd_dif ~ maxtemp, data=maxdata)
+summary(maxlm)
+
+#compare AIC between models
+AIC(maxmodel, maxlm)
+
+ggplot(maxdata, aes(x = maxtemp, y = jd_dif)) + 
+  geom_point() + 
+  geom_abline(intercept = -23.6745, slope = 3.1483) +
+  theme_bw() 
+```
+
+Ran model with MWAT metric
+```{r}
+#merge spwindow days datafram
+mwat <- merge(x=mwat, y=spdays, by=c("Site"), all.x=TRUE)
+#calculate jd_dif
+mwat$jd_dif = (mwat$sw_mid - mwat$DayOfYear)
+
+mwatmodel <- lm(jd_dif ~ WAT, data=mwat)
+summary(mwatmodel)
+```
+
+
+To investigate this we first plotted temperature time-series and 
+To test this hypothesis
+  
+
+Stream temperature time-series were used to calculate annual temperature metrics related to magnitude. MaximumThe response variable is the difference between the julian date of maximum stream temperature (e.g. MWAT) and julian date of the midpoint of the spawning window.  Positive differences indicate spawn timing is earlier than maximum temperatures and negative numbers indicate it is later. 
+
+
+Where the spawning window is distributed further (to the right) from the thermal peak.
+ 
+
+If slope_p,t is the slope of your temperature experienced by population p in year t, or the rate of change in temperature 
+
+and MaxTemp_p is the average (across years) of maximum temperature (across seasons),
+
+You could model the relationship with a population-specific intercept, common effect of MaxTemp across populations, while treating your year t as a random effect on your intercept(s).
+
+
+Reminded me of a recent review on “premature migration”.
+
+
+Quinn, T.P., McGinnity, P., Reed, T.E., and Bradford, M. 2016. The paradox of “premature migration” by adult anadromous salmonid fishes: patterns and hypotheses. Canadian Journal of Fisheries and Aquatic Sciences 73(7): 1015-1030.
+
+
+Of course if the peak temperature in all streams occurs on the same date, we should expect later occupancy/spawning to occur in warmer streams based on the difference in egg development rate alone.
+
+The key question is whether occupancy/spawn timing is shifted further onto the descending limb of the temp curve than is predicted by the difference in development time alone?
+
+
+

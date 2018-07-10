@@ -44,14 +44,30 @@ ggplot(maxdata, aes(x = jd_dif, y = maxtemp)) +
   geom_point() +
   facet_wrap(~Site)
 
-#maxtemp model
+#plots
+ggplot(maxdata, aes(x = jd_dif, y = maxtemp)) +
+  geom_point() +
+  facet_wrap(~year)
 
-maxmodel <- lme(maxtemp ~ jd_dif, random = ~1|year, data=maxdata)
+#remove 2002 - 2007 because smaller n
+maxdata <- maxdata %>% filter(!year %in% 2002:2007)
+
+#maxtemp model
+#mixed model
+maxmodel <- lme(jd_dif ~ maxtemp, random = ~1|year, data=maxdata)
 summary(maxmodel)
 
+#linear model
+maxlm <- glm(jd_dif ~ maxtemp, data=maxdata)
+summary(maxlm)
 
+#compare AIC between models
+AIC(maxmodel, maxlm)
 
-
+ggplot(maxdata, aes(x = maxtemp, y = jd_dif)) + 
+  geom_point() + 
+  geom_abline(intercept = -23.6745, slope = 3.1483) +
+  theme_bw() 
 
 
 

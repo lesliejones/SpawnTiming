@@ -72,3 +72,11 @@ ggplot(mwat, aes(x = year, y = WAT)) +
 
 ggplot(mwat, aes(x = WAT, y = year)) +
   geom_point() 
+
+#merge spwindow days datafram
+mwat <- merge(x=mwat, y=spdays, by=c("Site"), all.x=TRUE)
+#calculate jd_dif
+mwat$jd_dif = (mwat$sw_mid - mwat$DayOfYear)
+
+mwatmodel <- lm(jd_dif ~ WAT, data=mwat)
+summary(mwatmodel)

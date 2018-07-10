@@ -1,0 +1,73 @@
+---
+title: "slope models"
+author: "Leslie Jones"
+date: "May 21, 2018"
+output: html_document
+---
+
+```{r message=FALSE}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(lme4)
+library(nlme)
+library(DT)
+
+
+```
+
+
+
+#Slope of Temperature
+We fit a linear model to temperature time-series within the spawning window for each site-year combination. Theoretically,  slope of temperature experienced by population p in year t, or the rate of change in temperature at each site/year. 
+
+#Import spawn window dates
+
+```{r}
+#import julian days for spawning windows
+spdays <- read.csv("Data/spawnwindow_dates.csv")
+spdays <- rename(spdays, Site='site')
+datatable (spdays)
+```
+
+# Import temperature time-series
+```{r}
+temp <- read.csv("Data/spawn_timseries.csv")
+temp <- filter(temp, Temperature != "NA")
+#View(temp)
+```
+#merge datasets
+```{r}
+temp2 <- merge(x=temp, y=spdays, by=c("Site"), all.x=TRUE)
+```
+
+```{r}
+
+ggplot(temp2, aes(x=DayOfYear, y=Temperature )) +
+  geom_rect(data=temp2,aes(xmin=sw_begin, xmax=sw_end, ymin=-Inf, ymax=Inf), fill="lightgrey") +
+  geom_smooth(data=temp2,method="loess", se=TRUE) + 
+  geom_vline(data=temp2, aes(xintercept = sw_mid)) +
+  theme(legend.position = "none") +
+  facet_wrap (~Site) +
+  theme_bw() +
+  labs(y="Stream temperature (C)",
+       x="Day Of Year")
+
+# geom_smooth(aes(group=year, colour=factor(year)), method = "loess", se = FALSE) +
+
+```
+# Temperature by site
+
+
+```{r}
+ggplot(temp2, aes(x=DayOfYear, y=Temperature )) +
+geom_smooth(aes(group=year, colour=factor(year)), method = "loess", se = FALSE) +
+  facet_wrap(~Site)+
+  theme_bw() +
+  labs(y="Stream temperature (C)",
+       x="Day Of Year")
+
+```
+
